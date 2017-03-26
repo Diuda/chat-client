@@ -1,12 +1,45 @@
 var mongoose = require('mongoose');
 
-
 var chatSchema = new mongoose.Schema({
-	id: {type:Number, unique:true}
-	create: {type:Date, default:Date.now},
-	content: {type:String},
-	username: {type:String},
-	room: {type:String}
+    uid: { type: String, unique: true }
 });
 
-var chat = mongoose.model('Chat', ChatSchema);
+var roomSchema = new mongoose.Schema({
+    s_id: { type: String },
+    r_id: { type: String },
+    room_id: { type: String, unique: true }
+});
+
+
+roomSchema.methods.setRoomID = function() {
+    this.room_id = this.s_id + this.r_id + 'r';
+    return roomSchema.room_id;
+};
+
+var messageSchema = new mongoose.Schema({
+    s_id: { type: String },
+    r_id: { type: String },
+    room_id: { type: String },
+    message_id: { type: String, unique: true},
+    created_date: { type: Date, default: Date.now() },
+    message_content: { type: String }
+});
+
+
+
+var ChatL = mongoose.model('ChatL', chatSchema);
+var Room = mongoose.model('Room', roomSchema);
+var Message = mongoose.model('Message', messageSchema);
+
+
+module.exports = {
+	ChatL:ChatL,
+	Room: Room,
+	Message: Message
+};
+
+
+
+
+
+

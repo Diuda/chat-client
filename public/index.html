@@ -27,7 +27,8 @@
 <!-- enter username -->
     <div id="username">
         <form id="fuser">
-            <input type="text" id="iuser">
+            <input type="text" id="iuser" placeholder="user_id">
+            <input type="text" id="uuser" placeholder="receiver_id">
             <input type="submit">
         </form>
     </div>
@@ -59,31 +60,33 @@
     var mess = $('#imessage');
     var chat = $('#mess');
     var username = $('#username');
+    var receiver = $('#uuser');
 
     fusername.submit(function(e) {
         e.preventDefault();
-        socket.emit('new user', user.val(), function(data) {
-            if (data) {
+        socket.emit('new user', user.val(), receiver.val(), function(data) {
+            // if (data) {
                 username.hide();
                 chat.show();
-            } else {
-                console.log("some error");
-            }
+            // } else {
+            //     console.log("some error");
+            // }
         });
         user.val('');
     });
 
     fmessage.submit(function(e) {
         e.preventDefault();
+        console.log(receiver.val());
         socket.emit('chat message', mess.val());
         mess.val('');
         return false
     });
-    socket.on('username', function(data) {
+    socket.on('username', function(data, callback) {
         var users = '';
-        for (var i = 0; i < data.length; i++) {
-            users += '<a href=#'+data[i]+'>'+data[i]+ '</a> Connected<br/>';
-        }
+        // for (var i = 0; i < data.length; i++) {
+            users += '<li>'+data+ '</li> Connected<br/>';
+        // }
         $('#nuser').append(users);
         // $('#userchat').append("users");
     });
