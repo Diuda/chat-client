@@ -18,25 +18,27 @@ var sender;
 var rec;
 var roomName;
 
-function getRoomName(user, reciever, callback){
-	       Chat.Room.findOne({ s_id: user, r_id: reciever }, function(err, room){
-	       	if(room!=null){
-	       		// sender = user;
-        	roomName = room.room_id;
-        	console.log(roomName);
-            return callback(roomName);
+function getRoomName(user, reciever, callback) {
+    Chat.Room.findOne({ s_id: user, r_id: reciever }, function(err, room) {
+        if (room != null) {
+
+            sender = user;
+            rec = reciever;
+            roomName = room.room_id;
+            console.log(reciever);
+            return callback(roomName, sender, rec);
+        } else {
+            Chat.Room.findOne({ s_id: reciever, r_id: user }, function(err, room) {
+                if (room != null) {
+                    sender = user;
+                    rec = reciever;
+                    roomName = room.room_id;
+                    console.log(reciever);
+                    return callback(roomName, sender, rec);
+                }
+            });
         }
-        else{
-        	Chat.Room.findOne({s_id: reciever, r_id: user}, function(err, room){
-        		if(room!=null){
-        			// sender = user;
-        			roomName = room.room_id;
-        			console.log(roomName);
-                    return callback(roomName);
-        			}
-        		});
-        	}
-        });
+    });
 }
 
 io.on('connection', function(socket) {
@@ -47,59 +49,47 @@ io.on('connection', function(socket) {
 
     socket.on('new user', function(user, reciever, callback) {
         // if(data in usernames){
-        // 	callback(false)
+        //  callback(false)
         // }
-        
+
         callback(true);
 
 
- 		getRoomName(user, reciever, function(roomN){
+        getRoomName(user, reciever, function(roomN) {
 
-        console.log(roomN);
-        socket.username = user
-        socket.join(roomN);
+            console.log(roomN);
+            socket.username = user
+            socket.join(roomN);
 
-          io.sockets.emit('username', socket.username);
+            io.sockets.emit('username', socket.username);
 
         });
- 		// sender = user;
-
-
-        // console.log(user + ' ' + reciever);
-        // // else{
-        
-        // socket.username = user;
-        // // usernames[socket.username] = socket;
-        // usernames.push(socket.username);
-      
-
-
 
     });
-    // console.log(socket.id);
+
 
     var message = new Chat.Message();
 
     socket.on('chat message', function(data) {
-    	// console.log(roomName);
-    	// console.log(data+" "+socket.username);
 
-        message.find({room_id: roomName}, function(err, data){
-            console.log("sender: "+s_id+" reciever: "+r_id+" message: "+message_content+" time: "+create_date);
+        Chat.Message.find({ room_id: roomName }, function(err, data) {
+            console.log(data);
+            for (var x = 0; x < data.length; x++) {
+                console.log("sender: " + data[x].s_id + " reciever: " + data[x].r_id + " message: " + data[x].message_content + " time: " + data[x].created_date);
+            }
         });
         io.in(roomName).emit('message', { msg: data, user: socket.username });
-        // console.log(io.sockets.manager);
-        // console.log(io.sockets.manager.roomClients[socket.id]);
-        
+
         message.s_id = socket.username;
         message.room_id = roomName;
         message.message_id = uuid.v4();
         message.message_content = data;
+        // FIX THE RECIEVER
+        // message.r_id = rec;
 
-        message.save(function(err){
+        message.save(function(err) {
             if (err)
-                // res.send(err);
-            console.log(err);
+                console.log(err);
             else
                 console.log("data added");
         });
@@ -111,7 +101,7 @@ io.on('connection', function(socket) {
 
 
     socket.on('disconnect', function() {
-        console.log('User disconnected');				
+        console.log('User disconnected');
         //     return;
         // // delete usernames[socket.username];
         // // usernames.splice(usernames.indexOf(socket.username), 1);
